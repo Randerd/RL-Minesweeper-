@@ -176,7 +176,7 @@ class Minesweeper(gym.Env):
 
         return self.board, reward, False, {}
 
-    def get_action(self):
+    def get_random_action(self):
         valid_actions = (self.board == -1).flatten().astype(np.int8)
         action = self.action_space.sample(valid_actions)
         return action//self.width, action%self.width
@@ -186,7 +186,7 @@ class Minesweeper(gym.Env):
         screen_text = pygame.font.SysFont("Calibri", 16, True).render(num, True, c)
         self.window.blit(screen_text, (x,y))
 
-    def render(self):
+    def render(self, next_action = None):
         self.window.fill(WHITE)
         for x in range(0, self.width):
             for y in range(0, self.height):
@@ -196,7 +196,10 @@ class Minesweeper(gym.Env):
                     self.drawNumber(self.board[y,x], x_pos+12, y_pos+8, self.colors[self.board[y,x]-1])
 
                 rect = pygame.Rect(x_pos, y_pos, self.block_size, self.block_size)
-                pygame.draw.rect(self.window, BLACK, rect, self.board[y,x]!=0)
+                if next_action == (y,x):
+                    pygame.draw.rect(self.window, (230,0,0), rect, 2)
+                else:
+                    pygame.draw.rect(self.window, BLACK, rect, self.board[y,x]!=0)
         
         pygame.display.update()
         self.clock.tick(self.metadata["render_fps"])

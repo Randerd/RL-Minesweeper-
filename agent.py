@@ -1,27 +1,36 @@
-from minesweeper_env import Minesweeper
-import gymnasium as gym
-import pygame
 import numpy as np
 
-gym.register(
-    id = 'Minesweeper-v0',
-    entry_point = 'minesweeper_env:Minesweeper',
-    kwargs = {'board_size':(10,20), 'num_mines': 15}
-)
+class Agent():
 
-env = gym.make('Minesweeper-v0', board_size = (10,20), num_mines = 15)
-env.reset()
-env.render()
+    def __init__(self, model, **kwargs) -> None:
+        self.model = model
+        self.width = kwargs['WIDTH']
+        self.height = kwargs['HEIGHT']
+        self.epsilon = kwargs['EPSILON']
 
-done = False
-for i in range(50):
-        
-    pygame.event.get()
-    action = env.get_action()  # Random action selection
-    obs, reward, done, _ = env.step(action)
-    env.render()
-    print(f'Action: {action},\t Reward: {reward},\t Done: {done}')
-    # print('Done:', done)
-    if done:
-        env.reset()
-    pygame.time.wait(100)
+            
+    def is_greedy(self, epsilon):
+        return epsilon < np.random.random()
+    
+    def choose_action(self, state: np.ndarray):
+        filtered_state = self.reshape_for_net(state)
+        valid_actions = (state != -1).flatten().astype(np.int8)
+        if self.is_greedy(self.epsilon):    #Exploit
+            q_table = self.model.predict(filtered_state)
+            valid_actions = np.ma.masked_array(q_table, valid_actions)
+            return np.argmax(valid_actions), filtered_state
+        else:                               #Explore
+            valid_actions = np.where(valid_actions != 1)[0]
+            return np.random.choice(valid_actions), filtered_state
+
+    def reshape_for_net(self, state):
+        #Channels first \_('')_/
+        #couldn't print nn_input for 0s otherwise 
+        filtered_state = np.zeros((9,10,20))
+        for tile_num in range(0,9):
+            idx1, idx2 = np.where(state == tile_num)
+            filtered_state[tile_num, idx1, idx2] = 1
+
+        return filtered_state
+
+           
