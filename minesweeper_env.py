@@ -67,7 +67,7 @@ class Minesweeper(gym.Env):
         return (0 <= x < self.width) & (0 <= y < self.height)
 
     def spaces_left(self):
-        return np.count_nonzero(self.board == self.HIDDEN) - self.num_mines
+        return np.count_nonzero(self.board == self.HIDDEN)
 
     def is_mine(self, action):
         return self.mines[action] == self.MINE
@@ -79,7 +79,7 @@ class Minesweeper(gym.Env):
         return self.board[action] == self.HIDDEN
     
     def is_win(self):
-        return np.count_nonzero(self.board == self.HIDDEN) == self.num_mines
+        return self.spaces_left() == self.num_mines
 
     def is_valid_move(self,action):
         return self.inbounds(action) & self.is_hidden(action)
@@ -88,8 +88,8 @@ class Minesweeper(gym.Env):
         self.board = np.full(self.board_size, self.HIDDEN, dtype=int)
         self.mines = self.generate_mines()
         self.start()
-        if self.render_mode == "human":
-            self.render()
+        # if self.render_mode == "human":
+        #     self.render()
         return self.board, {}
 
     def generate_mines(self):
@@ -162,7 +162,7 @@ class Minesweeper(gym.Env):
             return self.board, self.loss_reward, False, {}
         
         if self.is_mine(action):            #Hit mine
-            return self.board, self.loss_reward-0.1, True, {}
+            return self.board, self.loss_reward, True, {}
         
         if self.visible_neighbouring_cells(action):    #Not "guess"
             reward = self.action_reward
@@ -208,9 +208,11 @@ class Minesweeper(gym.Env):
         pygame.display.quit()
         pygame.quit()
 
-# if __name__ == "__main__":
-#     m = Minesweeper((10,20), 15)
-#     m.reset()
+if __name__ == "__main__":
+    m = Minesweeper((10,20), 15)
+    print(m.board)
+    m.reset()
+    print(m.board)
 #     while not m.is_win():
 #         x,y = input("Enter next move (y,x): ").split(",")
 #         action = (int(x), int(y))
